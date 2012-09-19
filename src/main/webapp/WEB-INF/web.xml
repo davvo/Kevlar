@@ -4,8 +4,8 @@
     version="2.5">
 
     <servlet>
-        <servlet-name>KeyValue</servlet-name>
-        <servlet-class>keyvalue.KeyValueServlet</servlet-class>
+        <servlet-name>KevlarServlet</servlet-name>
+        <servlet-class>kevlar.KevlarServlet</servlet-class>
         <init-param>
             <param-name>dirPath</param-name>
             <param-value>asdf</param-value>
@@ -13,8 +13,8 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
-        <servlet-name>KeyValue</servlet-name>
-        <url-pattern>/keyvalue/*</url-pattern>
+        <servlet-name>KevlarServlet</servlet-name>
+        <url-pattern>/kevlar/*</url-pattern>
     </servlet-mapping>
 
 </web-app>
