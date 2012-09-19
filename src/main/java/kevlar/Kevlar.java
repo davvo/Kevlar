@@ -67,6 +67,13 @@ class Kevlar {
         return null;
     }
 
+    public long getTimestamp(String bucket, String key) {
+        if (buckets.containsKey(bucket)) {
+            return buckets.get(bucket).getTimestamp(key);
+        }
+        return -1L;
+    }
+
     public void put(String bucket, String key, byte[] value) {
         if (!buckets.containsKey(bucket)) {
             File dataFile = new File(dir, bucket + ".dat");

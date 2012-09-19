@@ -16,7 +16,7 @@ import java.util.Map;
 
 class Bucket {
 
-    private final static int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
+    public final static int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
 
     private Map<String, IndexEntry> index;
 
@@ -78,28 +78,12 @@ class Bucket {
 
             IndexEntry entry = index.get(key);
 
-            int bufIndex = (int) (entry.getOffset() / MAX_BUFFER_SIZE);
-            int bufOffset = (int) (entry.getOffset() % MAX_BUFFER_SIZE);
+            ByteBufferReader bufReader = new ByteBufferReader(buffers, entry.getOffset());
 
-            ByteBuffer buf = buffers[bufIndex].duplicate();
-            buf.position(bufOffset);
+            Header header = new Header(bufReader);
 
-            Header header = new Header(buf);
-
-            int length = header.getValueLength();
-            byte[] value = new byte[length];
-
-            int available = buf.remaining();
-
-            buf.get(value, 0, Math.min(available, length));
-
-            if (available < length) {
-                buf = buffers[bufIndex + 1].duplicate();
-                buf.position(0);
-                buf.get(value, available, (length - available));
-            }
-
-            return value;
+            bufReader.skip(header.getKeyLength());
+            return bufReader.getBytes(header.getValueLength());
 
         } catch (Exception x) {
             throw new RuntimeException(x);

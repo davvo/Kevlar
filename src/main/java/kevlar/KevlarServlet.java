@@ -22,62 +22,65 @@ public class KevlarServlet extends HttpServlet {
     }
 
     @Override
+    public long getLastModified(HttpServletRequest req) {
+        return store.getTimestamp(bucket(req), key(req));
+    }
+
+    @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-
-        Path path;
-
         try {
-            path = getPath(req);
-        } catch (Exception x) {
-            res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected " + req.getServletPath() + "/<bucket>/<key>");
-            return;
+
+            String bucket = bucket(req);
+            String key = key(req);
+
+            if (!store.contains(bucket, key)) {
+                res.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            byte[] value = store.get(bucket, key);
+
+            System.out.println(bucket(req) + "/" + key(req) + " -> " + new String(value));
+
+            res.setContentLength(value.length);
+
+            String contentType = req.getHeader("Content-Type");
+            if (contentType != null) {
+                res.setContentType(contentType);
+            }
+
+            OutputStream out = res.getOutputStream();
+            out.write(value);
+            out.flush();
+            out.close();
+
+        } catch (IllegalArgumentException x) {
+            res.sendError(HttpServletResponse.SC_BAD_REQUEST, x.getMessage());
         }
-
-        if (!store.contains(path.bucket, path.key)) {
-            res.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        byte[] value = store.get(path.bucket, path.key);
-
-        res.setContentLength(value.length);
-
-        String contentType = req.getHeader("Content-Type");
-        if (contentType != null) {
-            res.setContentType(contentType);
-        }
-
-        OutputStream out = res.getOutputStream();
-        out.write(value);
-        out.flush();
-        out.close();
-
     }
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-
-        Path path;
-
         try {
-            path = getPath(req);
-        } catch (Exception x) {
-            res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected " + req.getServletPath() + "/<bucket>/<key>");
-            return;
+
+            ServletInputStream in = req.getInputStream();
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+
+            byte[] bytes = new byte[2048];
+            int read = 0;
+            while ((read = in.read(bytes)) > 0) {
+                bout.write(bytes, 0, read);
+            }
+            bout.flush();
+            bout.close();
+
+            System.out.println(bucket(req) + "/" + key(req) + " -> " + new String(bout.toByteArray()));
+
+            store.put(bucket(req), key(req), bout.toByteArray());
+
+        } catch (IllegalArgumentException x) {
+            res.sendError(HttpServletResponse.SC_BAD_REQUEST, x.getMessage());
         }
-
-        ServletInputStream in = req.getInputStream();
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-
-        byte[] bytes = new byte[2048];
-        int read = 0;
-        while ((read = in.read(bytes)) > 0) {
-            bout.write(bytes, 0, read);
-        }
-        bout.flush();
-        bout.close();
-
-        store.put(path.bucket, path.key, bout.toByteArray());
     }
 
     @Override
@@ -85,21 +88,22 @@ public class KevlarServlet extends HttpServlet {
         doPost(req, res);
     }
 
-    private Path getPath(HttpServletRequest req) {
-        String pathInfo = req.getPathInfo().substring(1);
-        int index = pathInfo.indexOf("/");
-        String bucket = pathInfo.substring(0, index);
-        String key = pathInfo.substring(index + 1);
-        return new Path(bucket, key);
-    }
-
-    private static class Path {
-        String bucket;
-        String key;
-
-        public Path(String bucket, String key) {
-            this.bucket = bucket;
-            this.key = key;
+    private String bucket(HttpServletRequest req) {
+        try {
+            String pathInfo = req.getPathInfo().substring(1);
+            return pathInfo.substring(0, pathInfo.indexOf("/"));
+        } catch (Exception x) {
+            throw new IllegalArgumentException("Expected " + req.getServletPath() + "/<bucket>/<key>");
         }
     }
+
+    private String key(HttpServletRequest req) {
+        try {
+            String pathInfo = req.getPathInfo().substring(1);
+            return pathInfo.substring(pathInfo.indexOf("/") + 1);
+        } catch (Exception x) {
+            throw new IllegalArgumentException("Expected " + req.getServletPath() + "/<bucket>/<key>");
+        }
+    }
+
 }

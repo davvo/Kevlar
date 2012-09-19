@@ -27,6 +27,11 @@ class Header {
         fromByteBuffer(buf);
     }
 
+    public Header(ByteBufferReader bufRead) {
+        ByteBuffer buf = ByteBuffer.wrap(bufRead.getBytes(SIZE));
+        fromByteBuffer(buf);
+    }
+
     public Header(ByteBuffer buf) {
         fromByteBuffer(buf);
     }
