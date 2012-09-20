@@ -6,15 +6,13 @@ import java.nio.channels.FileChannel;
 
 class Header {
 
-    public static final int SIZE = 17;
+    public static final int SIZE = 16;
 
-    private boolean active;
     private long timestamp;
     private int keyLength;
     private int valueLength;
 
     public Header(byte[] key, byte[] value) {
-        active = true;
         timestamp = System.currentTimeMillis();
         keyLength = key.length;
         valueLength = value.length;
@@ -38,7 +36,6 @@ class Header {
 
     public ByteBuffer toByteBuffer() {
         ByteBuffer buf = ByteBuffer.allocate(SIZE);
-        buf.put(active ? (byte) 1 : (byte) 0);
         buf.putLong(timestamp);
         buf.putInt(keyLength);
         buf.putInt(valueLength);
@@ -47,17 +44,9 @@ class Header {
     }
 
     private void fromByteBuffer(ByteBuffer buf) {
-        active = buf.get() > 0;
         timestamp = buf.getLong();
         keyLength = buf.getInt();
         valueLength = buf.getInt();
-    }
-
-    /**
-     * @return the active
-     */
-    public boolean isActive() {
-        return active;
     }
 
     /**

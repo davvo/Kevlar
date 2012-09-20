@@ -40,8 +40,6 @@ public class KevlarServlet extends HttpServlet {
 
             byte[] value = store.get(bucket, key);
 
-            System.out.println(bucket(req) + "/" + key(req) + " -> " + new String(value));
-
             res.setContentLength(value.length);
 
             String contentType = req.getHeader("Content-Type");
@@ -73,8 +71,6 @@ public class KevlarServlet extends HttpServlet {
             }
             bout.flush();
             bout.close();
-
-            System.out.println(bucket(req) + "/" + key(req) + " -> " + new String(bout.toByteArray()));
 
             store.put(bucket(req), key(req), bout.toByteArray());
 
