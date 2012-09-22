@@ -2,22 +2,24 @@ package kevlar;
 
 import java.nio.ByteBuffer;
 
-public class ByteBufferReader {
+class ByteBufferReader {
 
     private ByteBuffer[] buffers;
     private int bufIndex;
-    private int bufOffset;
-
     private ByteBuffer buf;
 
     public ByteBufferReader(ByteBuffer[] buffers, long offset) {
         this.buffers = buffers;
+        position(offset);
+    }
 
-        bufIndex = (int) (offset / Bucket.MAX_BUFFER_SIZE);
-        bufOffset = (int) (offset % Bucket.MAX_BUFFER_SIZE);
-
-        buf = buffers[bufIndex].duplicate();
-        buf.position(bufOffset);
+    public void position(long newPosition) {
+        bufIndex = 0;
+        buf = buffers[bufIndex];
+        while (newPosition > buf.limit()) {
+            newPosition -= buf.limit();
+            buf = buffers[++bufIndex];
+        }
     }
 
     public void skip(int size) {
@@ -37,7 +39,7 @@ public class ByteBufferReader {
         return bytes;
     }
 
-    public void get(byte[] arr) {
+    private void get(byte[] arr) {
 
         int length = arr.length;
         int available = buf.remaining();

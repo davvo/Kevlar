@@ -6,15 +6,15 @@ import java.nio.channels.FileChannel;
 
 class Header {
 
-    public static final int SIZE = 16;
+    static final int SIZE = 13;
 
     private long timestamp;
-    private int keyLength;
+    private byte keyLength;
     private int valueLength;
 
     public Header(byte[] key, byte[] value) {
         timestamp = System.currentTimeMillis();
-        keyLength = key.length;
+        keyLength = (byte) key.length;
         valueLength = value.length;
     }
 
@@ -34,10 +34,17 @@ class Header {
         fromByteBuffer(buf);
     }
 
+    public String readKey(FileChannel fc) throws IOException {
+        ByteBuffer buf = ByteBuffer.allocate(keyLength);
+        fc.read(buf);
+        buf.rewind();
+        return new String(buf.array(), "utf8");
+    }
+
     public ByteBuffer toByteBuffer() {
         ByteBuffer buf = ByteBuffer.allocate(SIZE);
         buf.putLong(timestamp);
-        buf.putInt(keyLength);
+        buf.put(keyLength);
         buf.putInt(valueLength);
         buf.rewind();
         return buf;
@@ -45,7 +52,7 @@ class Header {
 
     private void fromByteBuffer(ByteBuffer buf) {
         timestamp = buf.getLong();
-        keyLength = buf.getInt();
+        keyLength = buf.get();
         valueLength = buf.getInt();
     }
 

@@ -1,6 +1,7 @@
 package kevlar;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -13,12 +14,12 @@ import javax.servlet.http.HttpServletResponse;
 @SuppressWarnings("serial")
 public class KevlarServlet extends HttpServlet {
 
-    private Kevlar store;
+    private WritableStore store;
 
     @Override
     public void init(ServletConfig config) {
-        String dirPath = config.getInitParameter("dirPath");
-        store = new Kevlar(dirPath);
+        File dir = new File(config.getInitParameter("dirPath"));
+        store = new WritableStore(dir);
     }
 
     @Override
